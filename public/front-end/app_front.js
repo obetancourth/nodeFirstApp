@@ -2,8 +2,10 @@ var Application = function(){
     this._geoEnabled = false;
     this._localStorage = false;
     this._secciones = new Array();
+    this._reportForm = null;
+    this._currentItem = null;
     // referencia circular a si mismo para
-    //mantener el contexto de llamado
+    // mantener el contexto de llamado
     // sin conflicto con el cambio
     // que hace jquery a la variable this
     var _self = this;
@@ -11,7 +13,7 @@ var Application = function(){
     this.init = function(){
       this.checkgeoData();
       this.checkLocalStorage();
-
+      this._reportForm = $("[data-field]");
     }
 
     this.checkgeoData = function(){
@@ -39,11 +41,9 @@ var Application = function(){
             .listview()
             .find("a")
             .click(function(e){
-              console.log($(this).attr("data_id"));
-              console.log(_self);
-              var itemIndex = parseInt($(this).attr("data_id"));
-              var item = _self.loadSeccionByIndex(itemIndex);
-              console.log(item);
+              var itemIndex = parseInt($(this).attr("data_id")),
+                  item = _self.loadSeccionByIndex(itemIndex);
+              _self.setItem(item);
             });
         },
         "json"
@@ -52,6 +52,27 @@ var Application = function(){
       });
     }
 
+    this.setItem = function(item){
+      if(item && _self._reportForm){
+
+        $.each(_self._reportForm, function(index,fieldObj){
+          switch(fieldObj.id){
+              case "Lns":
+              case "Mrt":
+              case "Mrc":
+              case "Jvs":
+              case "Vrn":
+              case "Sbd":
+                  fieldObj.style.fontWeight = (item[fieldObj.id] == 1)? "800":"400";
+                  break;
+
+              default:
+                $(fieldObj).html(item[fieldObj.id]);
+          }
+        });
+        _self._currentItem = item;
+      }
+    }
     this.loadSeccionByIndex = function(index){
       if( index < _self._secciones.length && index >= 0){
         return _self._secciones[index];
@@ -64,7 +85,5 @@ var app = new Application();
 
 $("#pag1").on("pagecreate", function(e){
     app.init();
-    console.log("geocheck",app._geoEnabled);
-    console.log("localcheck", app._localStorage);
     app.loadSecciones();
 })

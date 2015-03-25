@@ -22,7 +22,7 @@ function api_router(db){
                 };
 
     //console.log(query);
-    secciones.find(query).toArray(function(err, docs){
+    secciones.find(query).sort({"Aula":1}).toArray(function(err, docs){
       if(err) throw err;
       res.status(200).json(docs);
     })
