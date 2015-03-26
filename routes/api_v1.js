@@ -6,6 +6,7 @@ function api_router(db){
   router.get('/getTocken',function(req,res,next){
       res.status(200).json({tocken:"whenthecatgoesouthtemicepartyallnight"});
     });
+
   // Ruta para extraer las aulas con clases en la hora y fecha del sistema
   router.get('/getSecciones', function(req, res, next){
     var secciones = db.collection("secciones");
@@ -26,6 +27,12 @@ function api_router(db){
       if(err) throw err;
       res.status(200).json(docs);
     })
+  });
+
+  //Generar nuevo reporte
+  router.put('/createReport',function(req, res, next){
+    //dummy response
+    res.status(200).json({"TODO":"not implemented"});
   });
   return router;
 }
