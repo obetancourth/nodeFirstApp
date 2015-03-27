@@ -4,6 +4,7 @@ var Application = function(){
     this._secciones = new Array();
     this._reportForm = null;
     this._currentItem = null;
+
     // referencia circular a si mismo para
     // mantener el contexto de llamado
     // sin conflicto con el cambio
@@ -14,7 +15,28 @@ var Application = function(){
       this.checkgeoData();
       this.checkLocalStorage();
       this._reportForm = $("[data-field]");
+      // en Jquery no existe un metodo para .put o .delete
+      // asi que extenderemos jquery para que tenga estos
+      // metodos de ayuda.
+
+      $.put = function(url, data, handler, type){
+          return $.ajax(url,{
+            "data":data,
+            "dataType":type,
+            "method":"PUT"
+          }).done(handler);
+      }
+      $.delete = function(url, data, handler, type){
+          //to implement
+          return $.ajax(url,{
+            "data":data,
+            "dataType":type,
+            "method":"DELETE"
+          }).done(handler);
+        }
     }
+
+
 
     this.checkgeoData = function(){
       this._geoEnabled = navigator.geolocation && true;
@@ -52,6 +74,8 @@ var Application = function(){
       });
     }
 
+
+
     this.setItem = function(item){
       if(item && _self._reportForm){
 
@@ -73,11 +97,25 @@ var Application = function(){
         _self._currentItem = item;
       }
     }
+
     this.loadSeccionByIndex = function(index){
       if( index < _self._secciones.length && index >= 0){
         return _self._secciones[index];
       }
       return null;
+    }
+
+    this.createReport = function(){
+        var _id = _self._currentItem._id;
+        $.put("/api/createReport/" + _id,
+            {},
+            function(data,successStr,xrh){
+              console.log("createRepost", data)
+            },
+            "json")
+            .fail(function(xrh,failStr,error){
+              console.log(error);
+            });
     }
 }
 
@@ -86,4 +124,10 @@ var app = new Application();
 $("#pag1").on("pagecreate", function(e){
     app.init();
     app.loadSecciones();
+    //Estableciendo al evento click del boton de crear reporte
+    //La funcion que crea el reporte con la método PUT html
+
+    $("#btnReportar").on("vclick", function(e){
+      app.createReport();
+    });
 })
