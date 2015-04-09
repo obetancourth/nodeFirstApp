@@ -193,9 +193,7 @@ var Application = function(){
 }
 
 var app = new Application();
-$(document).ready(function(e){
    app.init();
-});
 
 $("#init").on("pagecreate", function(e){
     if(app.checkTocken()){
