@@ -80,7 +80,7 @@ var Application = function(){
       if(_self._localStorage && localStorage.tocken){
           localStorage.removeItem("tocken");
       }
-      _self.redirectTo("login");
+
     }
 
     //helpers
@@ -193,11 +193,14 @@ var Application = function(){
 }
 
 var app = new Application();
-   app.init();
+app.init();
 
-$("#init").on("pagecreate", function(e){
+$("#init").on("pagebeforecreate", function(e){
+    e.preventDefault();
     if(app.checkTocken()){
       app.redirectTo("pag1",{"changeHash":true});
+    }else{
+      app.redirectTo("login");
     }
   });
 
@@ -226,6 +229,7 @@ $("#pag2").on("pagecreate", function(e){
   app.checkTocken();
 }).on("pagebeforeshow",function(e,ui){
   if(!app._currentItem){
+    e.preventDefault();
     app.redirectTo("pag1",{"changeHash":true});
   }
 });
