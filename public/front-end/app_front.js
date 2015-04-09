@@ -4,7 +4,8 @@ var Application = function(){
     this._secciones = new Array();
     this._reportForm = null;
     this._currentItem = null;
-
+    this._currentHour = 0; // Permite controlar el cambio de hora asi recargar la lista
+    this._tocken = false;
     // referencia circular a si mismo para
     // mantener el contexto de llamado
     // sin conflicto con el cambio
@@ -37,20 +38,91 @@ var Application = function(){
     }
 
 
-
+    //funciones para verificar compatibilidad de HTML5 API
     this.checkgeoData = function(){
       this._geoEnabled = navigator.geolocation && true;
     }
+
     this.checkLocalStorage = function(){
       this._localStorage = (typeof(Storage) !== "undefined");
     }
 
-    this.loadSecciones = function(){
+    //Manejadores del Tocken de acceso a la aplicación
+    this.checkTocken = function(){
+      var Tocken = _self.getTocken();
+      if(Tocken){
+        if(new Date(Tocken.expires) <= new Date()){
+          _self.invalidateTocken();
+          return false;
+        }
+      }else{
+        _self.invalidateTocken();
+        return false;
+      }
+      return Tocken.hashdata;
+    }
+
+    this.getTocken = function(){
+      if(!_self._tocken){
+        if(_self._localStorage && localStorage.tocken){
+          _self._tocken = JSON.parse(localStorage.tocken);
+            return _self._tocken;
+        }
+      }else{
+        return _self._tocken;
+      }
+
+      return false
+    }
+
+    this.invalidateTocken = function(){
+      _self._tocken = false;
+      if(_self._localStorage && localStorage.tocken){
+          localStorage.removeItem("tocken");
+      }
+      _self.redirectTo("login");
+    }
+
+    //helpers
+    this.redirectTo = function(pageid, options){
+      var defaults = {"reverse":false,
+                      "changeHash":false};
+      $.extend(defaults, options);
+      $( ":mobile-pagecontainer" ).pagecontainer( "change", "#"+pageid , defaults );
+    }
+
+    this.getApiDS = function(){
+        return {"tocken": _self.checkTocken()};
+    }
+
+    //Api Consumers
+    this.getTockenApi = function(){
+      var ds = _self.getApiDS();
+      ds.user = $("#UserName").val();
+      ds.pinsec = $("#pinnumber").val(); //cambiar esto por el de un metodo de seguridad
+
+      $.post("/api/getTocken",
+        ds,
+        function(data,successStr,xrh){
+          _self._tocken = data;
+          if(_self._localStorage){
+            localStorage.setItem('tocken',JSON.stringify(data));
+            _self.redirectTo("pag1",{"changeHash":true});
+          }
+        },
+        "json"
+      ).fail(function(xrh,failstr, error){
+        console.log(error);
+      });
+    }
+
+    this.loadSecciones = function(refresh){
       $.get(
         "/api/getSecciones",
         {},
         function(data, successStr, xrh){
           //console.log(data);
+          _self._currentHour = new Date().getHours();
           var htmlstr = "";
           if(Array.isArray(data)){
             _self._secciones = data;
@@ -60,7 +132,7 @@ var Application = function(){
             }
           }
           $("#pag1_lstScn").html(htmlstr)
-            .listview()
+            .listview((refresh)?"refresh":null)
             .find("a")
             .click(function(e){
               var itemIndex = parseInt($(this).attr("data_id")),
@@ -110,24 +182,58 @@ var Application = function(){
         $.put("/api/createReport/" + _id,
             {},
             function(data,successStr,xrh){
-              console.log("createRepost", data)
+              alert("Reporte Creado");
+              _self.redirectTo("pag1",{"changeHash":true, "reverse":true});
             },
             "json")
             .fail(function(xrh,failStr,error){
-              console.log(error);
+              alert("Error al Generar el Reporte.\n Vuelva a Intentar mas tarde.")
             });
     }
 }
 
 var app = new Application();
+$(document).ready(function(e){
+   app.init();
+});
+
+$("#init").on("pagecreate", function(e){
+    if(app.checkTocken()){
+      app.redirectTo("pag1",{"changeHash":true});
+    }
+  });
 
 $("#pag1").on("pagecreate", function(e){
-    app.init();
+    app.checkTocken();
     app.loadSecciones();
     //Estableciendo al evento click del boton de crear reporte
     //La funcion que crea el reporte con la método PUT html
-
     $("#btnReportar").on("vclick", function(e){
       app.createReport();
     });
-})
+  }).on( "pagebeforeshow", function( e, ui ) {
+    //Para recargar el listview
+    if($(this).attr("data-loaded")=="1"){
+      var hourComp = new Date().getHours();
+      if(hourComp!= app._currentHour){
+        app.loadSecciones(true);
+      }
+    }else{
+      $(this).attr("data-loaded","1");
+    }
+
+});
+
+$("#pag2").on("pagecreate", function(e){
+  app.checkTocken();
+}).on("pagebeforeshow",function(e,ui){
+  if(!app._currentItem){
+    app.redirectTo("pag1",{"changeHash":true});
+  }
+});
+
+$("#login").on("pagecreate", function(e){
+  $("#btnlogon").on("vclick", function(e){
+    app.getTockenApi();
+  });
+});

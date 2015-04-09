@@ -1,15 +1,40 @@
 var express = require('express');
 var router = express.Router();
-
+var ObjectID = require('mongodb').ObjectID; // Para manejar adecuadamente el ID de registro en MONGODB
+var uuid = require('node-uuid'); //para hashes de tocken
 function api_router(db){
   /* TODO: Ruta para obtener el tocken de autorizacion */
-  router.get('/getTocken',function(req,res,next){
-      res.status(200).json({tocken:"whenthecatgoesouthtemicepartyallnight"});
+
+  var secciones = db.collection("secciones");
+  var reportes = db.collection("reportes");
+  var users = db.collection("usuarios");
+
+  router.post('/getTocken',function(req,res,next){
+      var query = {"user":req.body.user};
+      var expires = new Date();
+      expires.setDate(expires.getDate() + 32);
+      var tocken = uuid.v4();
+      //var tocken ="whenthecatgoesoutthemicepartyallnight";
+      users.findAndModify(query,
+                          {},
+                          {"$set":{"tocken":tocken,
+                                   "expires":expires.getTime()}}
+                          ,function(err, doc){
+        if(err || !doc){
+          console.log(err);
+          res.status(500).json({"error":"No se encuentra Dato"});
+        }
+        console.log(doc);
+
+        res.status(200).json({hashdata:tocken
+                              ,"expires":expires.getTime(),
+                              "user":doc.user});
+      });
     });
 
   // Ruta para extraer las aulas con clases en la hora y fecha del sistema
   router.get('/getSecciones', function(req, res, next){
-    var secciones = db.collection("secciones");
+
     var date = new Date(), hour = date.getHours(), day = date.getDay();
     var query = {"Inicio":{"$gte": hour},
                  "Final" :{"$lte":hour + 1},
@@ -23,7 +48,7 @@ function api_router(db){
                 };
     //Para poder probar sin tener que cambiar la hora del servidor virtual
     //Ya en produccion comentar la siguiente linea
-        query = {};
+    //    query = {};
     //-------------------------------------------------------------------
 
     secciones.find(query).sort({"Aula":1}).toArray(function(err, docs){
@@ -47,29 +72,28 @@ function api_router(db){
     // como :seccionId , se usa la variable req.params y
     // el nombre que continua despues de los << : >>
 
-    reportJsonDocument.SeccionId = req.params.seccionId; //<<-----
+    reportJsonDocument.SeccionId = new ObjectID(req.params.seccionId); //<<-----
 
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    // TAREA:
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    /*
-      1) Verificar usando findAndModify si existe el documento
-        en la coleccion secciones, si existe agregar al arreglo
-        <<reports>> la fecha que se está generado este reporte ($push)
-        y crear o aumnetar por 1 el atributo << NumeroReportes >> ($inc).
 
-        http://mongodb.github.io/node-mongodb-native/api-generated/collection.html#findandmodify
 
-      2) Agregue a la colección << reportes >> el documento json donde
-        SeccionId es igual al _id del documento de la sección.
-
-        http://mongodb.github.io/node-mongodb-native/api-generated/collection.html#insert
-
-      3) Si existe algun error devolver el status de la familia de los 500
-        adecuado y un documento json con los datos del error.
-
-    */
-    res.status(200).json({"Reporte":reportJsonDocument,"Error":{}});
+    //insertando el documento en la colleccion de reportes
+    reportes.insert(reportJsonDocument,{w:1}, function(err, insdoc){
+      if(err) res.status(500).json({"Reporte":{},"Error":err});
+      console.log(insdoc);
+      secciones.findAndModify({"_id":new ObjectID(reportJsonDocument.SeccionId)}, //query
+                            {}, // sort
+                            {"$inc":{"NumeroReportes":1},
+                             "$push":{"Reportes":{"FechaReporte":reportJsonDocument.FechaReporte,
+                                                  "ReporteID":insdoc[0]._id}
+                                     }
+                             }, //modificaciones
+                             {"new":true}, //opciones
+                             function(err, doc){
+                              if(err) res.status(500).json({"Reporte":{},"Error":err});
+                              res.status(200).json({"Reporte":insdoc[0],"Error":{}});
+                             }//
+                            );
+    });
   });
   return router;
 }
