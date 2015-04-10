@@ -6,6 +6,7 @@ var Application = function(){
     this._currentItem = null;
     this._currentHour = 0; // Permite controlar el cambio de hora asi recargar la lista
     this._tocken = false;
+    this._months = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
     // referencia circular a si mismo para
     // mantener el contexto de llamado
     // sin conflicto con el cambio
@@ -128,7 +129,11 @@ var Application = function(){
             _self._secciones = data;
             for(var i =0 ; i<data.length;i++){
               var seccion = data[i];
-              htmlstr += '<li><a href="#pag2" data_id="'+i+'">Edificio: '+seccion.Edificio+' Aula: '+seccion.Aula+'<p>'+seccion.NombreCurso+'</p></a></li>';
+              htmlstr += '<li><a href="#pag2" data_id="'+i+'">Edificio: '+seccion.Edificio+' Aula: '+seccion.Aula+'<p>'+seccion.NombreCurso+'</p>';
+              if(seccion.NumeroReportes){
+                htmlstr += '<span class="ui-li-count">' + seccion.NumeroReportes +'</span>';
+              }
+              htmlstr += '</a></li>';
             }
           }
           $("#pag1_lstScn").html(htmlstr)
@@ -166,6 +171,19 @@ var Application = function(){
                 $(fieldObj).html(item[fieldObj.id]);
           }
         });
+        if(item.Reportes){
+          var rptHtml = "";
+          for(var i=0 ; i<item.Reportes.length; i++ ){
+            var fecha = new Date(item.Reportes[i].FechaReporte);
+            rptHtml += '<li data-icon="alert"><a href>'+ fecha.getDate() + ' / ' + _self._months[fecha.getMonth()] + ' / ' + fecha.getFullYear() +'</a></li>';
+          }
+          if(rptHtml!=""){
+            rptHtml = '<li data-role="list-divider">Reportes</li>' + rptHtml;
+            $("#lstReporte").html(rptHtml).listview((_self._currentItem)?"refresh":null);
+          }
+        }else{
+          $("#lstReporte").html("");
+        }
         _self._currentItem = item;
       }
     }
@@ -200,7 +218,7 @@ $("#init").on("pagecreate", function(e){
       $("#btnlogin").hide();
       setTimeout(function(){
         app.redirectTo("pag1",{"changeHash":true});
-      }, 1000);
+      }, 500);
     }
   });
 
