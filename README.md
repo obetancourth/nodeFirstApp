@@ -12,9 +12,9 @@
 5. En un browser acceder a la url en puerto 3000
 
 ##Notas
-* Se recomienda usar forever (_npm_install_-g_forever) con monitor de directorios para que se inicie el server en cada modificación no estatica de los elementos.
+* Se recomienda usar forever (*npm install -g forever*) con monitor de directorios para que se inicie el server en cada modificación no estatica de los elementos.
   - forever start -w ./bin/www
 * Para facilitar la ejecucion en tiempo de depuración se debe crear un script que setee las siguientes variables en el ambiente:
-  *JQM_USECDN=1
-  *PORT=80
-  *DEBUG=newNodeProject
+  * JQM_USECDN=1
+  * PORT=80
+  * DEBUG=newNodeProject
