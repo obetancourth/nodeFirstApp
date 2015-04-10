@@ -195,17 +195,19 @@ var Application = function(){
 var app = new Application();
 app.init();
 
-$("#init").on("pagebeforecreate", function(e){
-    e.preventDefault();
+$("#init").on("pagecreate", function(e){
     if(app.checkTocken()){
-      app.redirectTo("pag1",{"changeHash":true});
-    }else{
-      app.redirectTo("login");
+      $("#btnlogin").hide();
+      setTimeout(function(){
+        app.redirectTo("pag1",{"changeHash":true});
+      }, 1000);
     }
   });
 
 $("#pag1").on("pagecreate", function(e){
-    app.checkTocken();
+    if(!app.checkTocken()){
+      app.redirectTo("init");
+    }
     app.loadSecciones();
     //Estableciendo al evento click del boton de crear reporte
     //La funcion que crea el reporte con la método PUT html
@@ -226,7 +228,9 @@ $("#pag1").on("pagecreate", function(e){
 });
 
 $("#pag2").on("pagecreate", function(e){
-  app.checkTocken();
+  if(!app.checkTocken()){
+    app.redirectTo("init");
+  }
 }).on("pagebeforeshow",function(e,ui){
   if(!app._currentItem){
     e.preventDefault();
