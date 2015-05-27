@@ -10,6 +10,9 @@ var Application = function(){
     this._currentEdificio = false;
     this._edfLoaded = false;
     this._scnLoaded = false;
+    this._pag1Lst = null;
+    this._pag0Lst = null;
+
     // referencia circular a si mismo para
     // mantener el contexto de llamado
     // sin conflicto con el cambio
@@ -20,6 +23,8 @@ var Application = function(){
       this.checkgeoData();
       this.checkLocalStorage();
       this._reportForm = $("[data-field]");
+      this._pag1Lst = $("#pag1_lstScn");
+      this._pag0Lst = $("#pag0_lstEdf");
       // en Jquery no existe un metodo para .put o .delete
       // asi que extenderemos jquery para que tenga estos
       // metodos de ayuda.
@@ -120,7 +125,7 @@ var Application = function(){
       });
     }
 
-    this.loadSecciones = function(refresh){
+    this.loadSecciones = function(){
       if(_self._currentEdificio){
         $.get(
           "/api/getSecciones/" + _self._currentEdificio,
@@ -140,7 +145,8 @@ var Application = function(){
                 htmlstr += '</a></li>';
               }
             }
-            $("#pag1_lstScn").html(htmlstr)
+            var refresh = _self._pag1Lst.hasClass('ui-listview');
+            _self._pag1Lst.html(htmlstr)
               .listview((refresh)?"refresh":null)
               .find("a")
               .click(function(e){
@@ -158,7 +164,7 @@ var Application = function(){
       }
     }
 
-    this.loadEdificios = function(refresh){
+    this.loadEdificios = function(){
       $.get(
         "/api/getEdificios",
         {},
@@ -170,7 +176,8 @@ var Application = function(){
                       +  '<span class="ui-li-count">'
                       + data[i].Secciones +'</span></a></li>';
           }
-          $("#pag0_lstEdf").html(htmlstr)
+          var refresh = _self._pag0Lst.hasClass('ui-listview');
+          _self._pag0Lst.html(htmlstr)
             .listview( (refresh)?"refresh": null)
             .find("a").on("vclick",function(e){
               e.preventDefault();
@@ -256,7 +263,7 @@ $("#init").on("pagecreate", function(e){
   $("#pag0").on("pagecreate", function(e){
     if($(this).attr("data-loaded")!="1"){
       $(this).find("#pag0_rfh").on("vclick", function(e){
-        app.loadEdificios(true);
+        app.loadEdificios();
       });
     }
     if(!app.checkTocken()){
@@ -269,7 +276,7 @@ $("#init").on("pagecreate", function(e){
     if($(this).attr("data-loaded")=="1"){
       var hourComp = new Date().getHours();
       if(hourComp!= app._currentHour){
-        app.loadEdificios(true);
+        app.loadEdificios();
       }
     }else{
       $(this).attr("data-loaded","1");
@@ -281,21 +288,19 @@ $("#pag1").on("pagecreate", function(e){
       app.redirectTo("pag0",{"changeHash":true});
     });
     $("#pag1_rfs").on("vclick", function(e){
-      app.loadSecciones(true);
+      app.loadSecciones();
     });
     if(!app.checkTocken()){
       app.redirectTo("init");
     }else{
-      app._scnLoaded = true;
       app.loadSecciones();
-
     }
   }).on( "pagebeforeshow", function( e, ui ) {
     //Para recargar el listview
     if($(this).attr("data-loaded")=="1"){
       var hourComp = new Date().getHours();
       if(hourComp!= app._currentHour){
-        app.loadSecciones(true);
+        app.loadSecciones();
       }
     }else{
       $(this).attr("data-loaded","1");

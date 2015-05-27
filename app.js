@@ -34,6 +34,12 @@ function app(db){
   //Levantamos la ruta del api
   var apiRoute = require('./routes/api_v1')(db);
   app.use("/api", apiRoute);
+
+  //levantamos la ruta del Manejador de Reportes y Mantenimientos
+  var backRoute = require('./routes/backoffice')(db);
+  app.use("/backoffice", backRoute);
+
+  
   // catch 404 and forward to error handler
   app.use(function(req, res, next) {
     var err = new Error('Not Found');
