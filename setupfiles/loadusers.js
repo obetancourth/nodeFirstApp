@@ -17,6 +17,5 @@ mongoClient.connect(url,function(err, db){
       usuarios.insert(jsonDocs,{w:1},function(err, records){
           console.log(records.length);
       });
-
     }
 });

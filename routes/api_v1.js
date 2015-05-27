@@ -9,6 +9,7 @@ function api_router(db){
   var reportes = db.collection("reportes");
   var users = db.collection("usuarios");
 
+
   router.post('/getTocken',function(req,res,next){
       var query = {"user":req.body.user};
       var expires = new Date();
@@ -33,11 +34,12 @@ function api_router(db){
     });
 
   // Ruta para extraer las aulas con clases en la hora y fecha del sistema
-  router.get('/getSecciones', function(req, res, next){
-
+  router.get('/getSecciones/:edificio', function(req, res, next){
+    var edificio = req.params.edificio;
     var date = new Date(), hour = date.getHours(), day = date.getDay();
     var query = {"Inicio":{"$gte": hour},
                  "Final" :{"$lte":hour + 1},
+                 "Edificio":edificio,
                  "$or":[{"Lns":(day==1)?1:false},
                         {"Mrt":(day==2)?1:false},
                         {"Mrc":(day==3)?1:false},
@@ -57,6 +59,32 @@ function api_router(db){
     })
   });
 
+
+  router.get('/getEdificios', function(req, res, next){
+  //obteniendo los edificios de las secciones en el momentos
+    var date = new Date(), hour = date.getHours(), day = date.getDay();
+    var query = {"Inicio":{"$gte": hour},
+                 "Final" :{"$lte":hour + 1},
+                 "$or":[{"Lns":(day==1)?1:false},
+                        {"Mrt":(day==2)?1:false},
+                        {"Mrc":(day==3)?1:false},
+                        {"Jvs":(day==4)?1:false},
+                        {"Vrn":(day==5)?1:false},
+                        {"Sbd":(day==6)?1:false}
+                       ]
+                };
+    //Para poder probar sin tener que cambiar la hora del servidor virtual
+    //Ya en produccion comentar la siguiente linea
+    //    query = {};
+    //-------------------------------------------------------------------
+
+    //secciones.distinct("Edificio", query, function(err, docs){
+    secciones.aggregate([ {"$match":query},
+                          {"$group":{"_id":"$Edificio", "Secciones":{"$sum":1}}}
+                        ], function(err , docs){
+      res.status(200).json(docs);
+    });
+  });
   //Generar nuevo reporte de Docente Ausente
   //para mejor documentación de rutas con parametros REST
   // http://expressjs.com/4x/api.html#app.param

@@ -14,17 +14,8 @@ mongoClient.connect(url,function(err, db){
       console.log("Obteniendo Coleccion secciones");
       var secciones = db.collection("secciones");
 
-      for(var i=0; i<jsonDocs.length; i++){
-        var insertDoc = jsonDocs[i];
-        secciones.insert(insertDoc,{w:0});
-      }
-
-      setTimeout(function(){
-        console.log("5 seconds waited");
-        secciones.count(function(err,counted){
-          console.log(counted);
-          db.close();
-        });
-      },5000);
+      secciones.insert(jsonDocs,{w:1},function(err, records){
+          console.log(records.length);
+      });
     }
 });

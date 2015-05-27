@@ -7,6 +7,9 @@ var Application = function(){
     this._currentHour = 0; // Permite controlar el cambio de hora asi recargar la lista
     this._tocken = false;
     this._months = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    this._currentEdificio = false;
+    this._edfLoaded = false;
+    this._scnLoaded = false;
     // referencia circular a si mismo para
     // mantener el contexto de llamado
     // sin conflicto con el cambio
@@ -108,7 +111,7 @@ var Application = function(){
           _self._tocken = data;
           if(_self._localStorage){
             localStorage.setItem('tocken',JSON.stringify(data));
-            _self.redirectTo("pag1",{"changeHash":true});
+            _self.redirectTo("pag0",{"changeHash":true});
           }
         },
         "json"
@@ -118,40 +121,68 @@ var Application = function(){
     }
 
     this.loadSecciones = function(refresh){
-      $.get(
-        "/api/getSecciones",
-        {},
-        function(data, successStr, xrh){
-          //console.log(data);
-          _self._currentHour = new Date().getHours();
-          var htmlstr = "";
-          if(Array.isArray(data)){
-            _self._secciones = data;
-            for(var i =0 ; i<data.length;i++){
-              var seccion = data[i];
-              htmlstr += '<li><a href="#pag2" data_id="'+i+'">Edificio: '+seccion.Edificio+' Aula: '+seccion.Aula+'<p>'+seccion.NombreCurso+'</p>';
-              if(seccion.NumeroReportes){
-                htmlstr += '<span class="ui-li-count">' + seccion.NumeroReportes +'</span>';
+      if(_self._currentEdificio){
+        $.get(
+          "/api/getSecciones/" + _self._currentEdificio,
+          {},
+          function(data, successStr, xrh){
+            //console.log(data);
+            _self._currentHour = new Date().getHours();
+            var htmlstr = "";
+            if(Array.isArray(data)){
+              _self._secciones = data;
+              for(var i =0 ; i<data.length;i++){
+                var seccion = data[i];
+                htmlstr += '<li><a href="#pag2" data_id="'+i+'">Edificio: '+seccion.Edificio+' Aula: '+seccion.Aula+'<p>'+seccion.NombreCurso+'</p>';
+                if(seccion.NumeroReportes){
+                  htmlstr += '<span class="ui-li-count">' + seccion.NumeroReportes +'</span>';
+                }
+                htmlstr += '</a></li>';
               }
-              htmlstr += '</a></li>';
             }
-          }
-          $("#pag1_lstScn").html(htmlstr)
-            .listview((refresh)?"refresh":null)
-            .find("a")
-            .click(function(e){
-              var itemIndex = parseInt($(this).attr("data_id")),
-                  item = _self.loadSeccionByIndex(itemIndex);
-              _self.setItem(item);
-            });
-        },
-        "json"
-      ).fail(function(xrh, failStr, error){
-        console.log(error);
-      });
+            $("#pag1_lstScn").html(htmlstr)
+              .listview((refresh)?"refresh":null)
+              .find("a")
+              .click(function(e){
+                var itemIndex = parseInt($(this).attr("data_id")),
+                    item = _self.loadSeccionByIndex(itemIndex);
+                _self.setItem(item);
+              });
+          },
+          "json"
+        ).fail(function(xrh, failStr, error){
+          console.log(error);
+        });
+      }else{
+        _self.redirectTo("pag0",{"changeHash":true});
+      }
     }
 
-
+    this.loadEdificios = function(refresh){
+      $.get(
+        "/api/getEdificios",
+        {},
+        function(data, successStr, xhr){
+          var htmlstr = "";
+          for(var i=0; i<data.length; i++){
+            htmlstr += '<li><a href data_id="'+ data[i]._id
+                      + '">Edificio: ' + data[i]._id
+                      +  '<span class="ui-li-count">'
+                      + data[i].Secciones +'</span></a></li>';
+          }
+          $("#pag0_lstEdf").html(htmlstr)
+            .listview( (refresh)?"refresh": null)
+            .find("a").on("vclick",function(e){
+              e.preventDefault();
+              e.stopPropagation();
+              _self._currentEdificio = $(this).attr("data_id");
+              app.loadSecciones(_self._scnLoaded);
+              _self.redirectTo("pag1",{"changeHash":true});
+            });
+        },
+        'json'
+      );
+    }
 
     this.setItem = function(item){
       if(item && _self._reportForm){
@@ -217,21 +248,48 @@ $("#init").on("pagecreate", function(e){
     if(app.checkTocken()){
       $("#btnlogin").hide();
       setTimeout(function(){
-        app.redirectTo("pag1",{"changeHash":true});
+        app.redirectTo("pag0",{"changeHash":true});
       }, 500);
     }
   });
 
-$("#pag1").on("pagecreate", function(e){
+  $("#pag0").on("pagecreate", function(e){
+    if($(this).attr("data-loaded")!="1"){
+      $(this).find("#pag0_rfh").on("vclick", function(e){
+        app.loadEdificios(true);
+      });
+    }
     if(!app.checkTocken()){
       app.redirectTo("init");
+    }else{
+      app.loadEdificios();
     }
-    app.loadSecciones();
-    //Estableciendo al evento click del boton de crear reporte
-    //La funcion que crea el reporte con la método PUT html
-    $("#btnReportar").on("vclick", function(e){
-      app.createReport();
+  }).on( "pagebeforeshow", function( e, ui ) {
+    //Para recargar el listview
+    if($(this).attr("data-loaded")=="1"){
+      var hourComp = new Date().getHours();
+      if(hourComp!= app._currentHour){
+        app.loadEdificios(true);
+      }
+    }else{
+      $(this).attr("data-loaded","1");
+    }});
+
+$("#pag1").on("pagecreate", function(e){
+
+    $("#pag1_edf").on("vclick", function(e){
+      app.redirectTo("pag0",{"changeHash":true});
     });
+    $("#pag1_rfs").on("vclick", function(e){
+      app.loadSecciones(true);
+    });
+    if(!app.checkTocken()){
+      app.redirectTo("init");
+    }else{
+      app._scnLoaded = true;
+      app.loadSecciones();
+
+    }
   }).on( "pagebeforeshow", function( e, ui ) {
     //Para recargar el listview
     if($(this).attr("data-loaded")=="1"){
@@ -246,6 +304,12 @@ $("#pag1").on("pagecreate", function(e){
 });
 
 $("#pag2").on("pagecreate", function(e){
+  //Estableciendo al evento click del boton de crear reporte
+  //La funcion que crea el reporte con la método PUT html
+  $("#btnReportar").on("vclick", function(e){
+    app.createReport();
+  });
+
   if(!app.checkTocken()){
     app.redirectTo("init");
   }
