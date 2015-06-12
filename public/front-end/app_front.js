@@ -235,7 +235,7 @@ var Application = function(){
 
     this.createReport = function(){
         var _id = _self._currentItem._id;
-        $.put("/api/createReport/" + _id,
+        $.put("/api/createReport/" + _id + "/" + _self.getApiDS().tocken,
             {},
             function(data,successStr,xrh){
               alert("Reporte Creado");
