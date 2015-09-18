@@ -37,8 +37,8 @@ function api_router(db){
   router.get('/getSecciones/:edificio', function(req, res, next){
     var edificio = req.params.edificio;
     var date = new Date(), hour = date.getHours(), day = date.getDay();
-    var query = {"Inicio":{"$gte": hour},
-                 "Final" :{"$lte":hour + 1},
+    var query = {"Inicio":{"$not":{"$gt": hour}},
+                 "Final" :{"$not":{"$lt":hour + 1}},
                  "Edificio":edificio,
                  "$or":[{"Lns":(day==1)?1:false},
                         {"Mrt":(day==2)?1:false},
@@ -63,8 +63,8 @@ function api_router(db){
   router.get('/getEdificios', function(req, res, next){
   //obteniendo los edificios de las secciones en el momentos
     var date = new Date(), hour = date.getHours(), day = date.getDay();
-    var query = {"Inicio":{"$gte": hour},
-                 "Final" :{"$lte":hour + 1},
+    var query = {"Inicio":{"$not":{"$gt": hour}},
+                 "Final" :{"$not":{"$lt":hour + 1}},
                  "$or":[{"Lns":(day==1)?1:false},
                         {"Mrt":(day==2)?1:false},
                         {"Mrc":(day==3)?1:false},
