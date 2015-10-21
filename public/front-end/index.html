@@ -4,22 +4,170 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title></title>
-    <link rel="stylesheet" href="vendor/jqm/c/jquery.mobile.min.css"/>
+    <link rel="stylesheet" href="vendor/jqm/c/t/uchmnt.min.css"/>
+    <link rel="stylesheet" href="vendor/jqm/c/t/jquery.mobile.icons.min.css"/>
+    <link rel="stylesheet" href="vendor/jqm/c/jquery.mobile.structure-1.4.5.min.css"/>
+    <style>
+       [data-field]{
+         font-size:0.8em;
+         font-weight:bolder;
+         padding:0.5em 0.25em;
+       }
+       label{
+         font-size:0.8em;
+         font-weight:bolder !important;
+       }
+       .negative{
+         background-color:#b73a05 !important;
+         color:white !important;
+       }
+    </style>
     <script src="vendor/jqm/j/jquery.min.js" ></script>
     <script src="vendor/jqm/j/jquery.mobile.min.js" ></script>
   </head>
   <body>
-      <div data-role="page" id="pag1">
+      <div data-role="page" id="init">
+
+        <div role="main" class="ui-content">
+          <h1 style="text-align:center;">Sistema de Supervisión UNICAH</h1>
+          <a id="btnlogin" class="ui-input-btn ui-btn ui-corner-all" href="#login">Iniciar</a>
+        </div>
+
+      </div>
+
+      <div data-role="page" id="pag0">
         <div data-role="header" data-position="fixed">
-          <h1>Supervisión</h1>
+          <h1>Edificios</h1>
         </div>
         <div role="main" class="ui-content">
-           Hurra
+          <ul id="pag0_lstEdf">
+
+          </ul>
         </div>
         <div data-role="footer" data-position="fixed">
-            <h3>UNICAH 2015</h3>
+          <div data-role="navbar">
+            <ul>
+              <li>
+                <a href id="pag0_rfh">Refrescar </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
+
+      <div data-role="page" id="pag1">
+        <div data-role="header" data-position="fixed">
+          <h1>Secciones</h1>
+        </div>
+        <div role="main" class="ui-content">
+           <ul id="pag1_lstScn">
+
+           </ul>
+        </div>
+        <div data-role="footer" data-position="fixed">
+          <div data-role="navbar">
+            <ul>
+              <li>
+                <a href id="pag1_edf">Edificios</a>
+              </li>
+              <li>
+                <a href id="pag1_rfs">Refrescar </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div data-role="page" id="pag2">
+        <div data-role="header" data-position="fixed">
+          <h1>Reporte</h1>
+        </div>
+        <div role="main" class="ui-content">
+          <div id="detalleAula">
+            <div class="ui-field-contain">
+              <label for="NombreCurso">Curso</label>
+              <div id="NombreCurso" data-field="NombreCurso"></div>
+            </div>
+            <div class="ui-field-contain ui-grid-b">
+              <div class="ui-block-a">
+                <label for="Edificio">Edificio</label>
+                <div id="Edificio" data-field="Edificio" ></div>
+              </div>
+              <div class="ui-block-b">
+                <label for="Aula">Aula</label>
+                <div id="Aula" data-field="Aula"></div>
+              </div>
+              <div class="ui-block-c">
+                <label for="Seccion">Sección</label>
+                <div id="Seccion" data-field="Seccion"></div>
+              </div>
+            </div>
+            <div class="ui-field-contain ui-grid-a">
+              <div class="ui-block-a ui-grid-b">
+                <div class="ui-block-a" data-field="Lns" id="Lns">
+                  Lns
+                </div>
+                <div class="ui-block-b" data-field="Mrt" id="Mrt">
+                  Mrt
+                </div>
+                <div class="ui-block-c" data-field="Mrc" id="Mrc">
+                  Mrc
+                </div>
+              </div>
+              <div class="ui-block-b ui-grid-b">
+                <div class="ui-block-a" data-field="Jvs" id="Jvs">
+                  Jvs
+                </div>
+                <div class="ui-block-b" data-field="Vrn" id="Vrn">
+                  Vrn
+                </div>
+                <div class="ui-block-c" data-field="Sbd" id="Sbd">
+                  Sbd
+                </div>
+              </div>
+            </div>
+            <div class="ui-field-contain">
+              <label for="NombreDocente">Docente</label>
+              <div id="NombreDocente" data-field="NombreDocente"></div>
+            </div>
+            <div class="ui-field-contain ui-grid-a">
+              <div class="ui-block-a">
+                <input type="button" value="Reportar" id="btnReportar" class="negative"/>
+              </div>
+              <div class="ui-block-b">
+                <a href="#pag1" class="ui-input-btn ui-btn ui-corner-all">Regresar</a>
+              </div>
+            </div>
+            <ul id="lstReporte" data-inset="true">
+
+            </ul>
+          </div>
+
+        </div>
+        <div data-role="footer" data-position="fixed">
+
+        </div>
+      </div>
+
+      <div data-role="page" id="login">
+
+        <div role="main" class="ui-content">
+          <h1>Verificación Usuario</h1>
+          <div class="ui-field-contain">
+            <label for="UserName">Usuario</label>
+            <input type="text" id="UserName" name="UserName" placeholder="Usuario"/>
+          </div>
+          <div class="ui-field-contain">
+            <label for="pinnumber">PIN</label>
+            <input type="text" id="pinnumber" name="pinnumber" placeholder="Código PIN"/>
+          </div>
+          <div class="ui-field-contain">
+            <input type="button" id="btnlogon" name="btnlogon" value="Ingresar"/>
+          </div>
+        </div>
+      </div>
+
+
 
       <script src="front-end/app_front.js"></script>
   </body>

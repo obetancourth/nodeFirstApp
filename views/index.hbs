@@ -1,0 +1,21 @@
+<h1>Reporte de Monitoreo de Supervisión</h1>
+<table>
+    <tr>
+        <th>Fecha</th>
+        <th>Asignatura</th>
+        <th>Sección</th>
+        <th>Docente</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+    </tr>
+    {{#each reportes}}
+            <tr>
+                <td>{{FechaReporte}}</td>
+                <td>{{NombreCurso}}</td>
+                <td>{{Seccion}}</td>
+                <td>{{NombreDocente}}</td>
+                <td>{{Status}}</td>
+                <td></td>
+            </tr>
+    {{/each}}
+</table>
