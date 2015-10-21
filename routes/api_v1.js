@@ -9,12 +9,28 @@ function api_router(db){
   var reportes = db.collection("reportes");
   var users = db.collection("usuarios");
 
+  router.post('/verifyTocken', function(req,res,next){
+      console.log(req.body);
+      var query = {user:req.body.user,tocken:req.body.hashdata, expires:Number(req.body.expires)};
+      users.findOne(query, function(err, userDoc){
+          if(err){
+              res.status(500).json({error:"Error Interno"});
+              return;
+          };
+          if(!userDoc){
+              res.status(500).json({error:"No se encontró tocken!"});
+              return;
+          }
+          res.status(200).json(req.body);
+        }
+      );
+  });
 
   router.post('/getTocken',function(req,res,next){
       var query = {"user":req.body.user};
       var expires = new Date();
       expires.setDate(expires.getDate() + 32);
-      var tocken = uuid.v4();
+      var tocken = uuid.v4().replace(/-/gi,'');
       //var tocken ="whenthecatgoesoutthemicepartyallnight";
       users.findAndModify(query,
                           {},
@@ -94,9 +110,13 @@ function api_router(db){
     var userDocQ = {"tocken": req.params.tocken};
     users.findOne(userDocQ, function(err, userDoc){
         if(err){
-            if(err) res.status(500).json({"Reporte":{},"Error":err});
+            res.status(500).json({"Reporte":{},"Error":err});
+            return;
         }
-
+        if(!userDoc){
+            res.status(500).json({"Reporte":{},"Error":"Tocken Enviado a Caducado o no es valido!"});
+            return;
+        }
         var reportJsonDocument = {
           "SeccionId":"",
           "FechaReporte":new Date(),

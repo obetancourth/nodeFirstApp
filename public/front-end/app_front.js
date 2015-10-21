@@ -57,7 +57,7 @@ var Application = function(){
     }
 
     //Manejadores del Tocken de acceso a la aplicación
-    this.checkTocken = function(){
+    this.checkTocken = function(handler){
       var Tocken = _self.getTocken();
       if(Tocken){
         if(new Date(Tocken.expires) <= new Date()){
@@ -68,9 +68,24 @@ var Application = function(){
         _self.invalidateTocken();
         return false;
       }
+      if(typeof handler==="function"){
+          $.post(
+              '/api/verifyTocken',
+              Tocken,
+              function(data,str,xhr){
+                  localStorage.setItem('tocken',JSON.stringify(data));
+                  handler();
+              },"json"
+          ).fail(function(){
+              _self.invalidateTocken();
+              return false;
+            }
+          );
+      }
       return Tocken.hashdata;
     }
-
+    //TODO: Revisar aqui el error de tockens sin vencer, hay que validar
+    //siempre el tocken del lado del server
     this.getTocken = function(){
       if(!_self._tocken){
         if(_self._localStorage && localStorage.tocken){
@@ -80,7 +95,6 @@ var Application = function(){
       }else{
         return _self._tocken;
       }
-
       return false
     }
 
@@ -252,12 +266,18 @@ var app = new Application();
 app.init();
 
 $("#init").on("pagecreate", function(e){
-    if(app.checkTocken()){
-      $("#btnlogin").hide();
-      setTimeout(function(){
-        app.redirectTo("pag0",{"changeHash":true});
-      }, 500);
-    }
+    app.checkTocken(function(){
+        $("#btnlogin").hide();
+        setTimeout(function(){
+          app.redirectTo("pag0",{"changeHash":true});
+        }, 500);
+    });
+    // if(app.checkTocken()){
+    //   $("#btnlogin").hide();
+    //   setTimeout(function(){
+    //     app.redirectTo("pag0",{"changeHash":true});
+    //   }, 500);
+    // }
   });
 
   $("#pag0").on("pagecreate", function(e){

@@ -13,7 +13,8 @@ SELECT
     a.ScnVrn as Vrn,
     a.ScnSbd as Sbd,
     ifnull(cast(c.catecod as char),'NA') as Docente,
-    ifnull(c.catenom,'') as NombreDocente
+    ifnull(c.catenom,'') as NombreDocente,
+    'ACT' as Estado
 from SCNPOD a
 	inner join CURSOS b on a.CrsCod = b.Crscod
     left join 
@@ -22,4 +23,4 @@ from SCNPOD a
                     inner join
 			CATEDRAT c on d.catecod = c.catecod
 where 
-	a.podano=2015 and a.podcod=2 and a.sedecod=1 and a.ScnEst = 'ACT';
+	a.podano=2015 and a.podcod=3 and a.sedecod=1 and a.ScnEst = 'ACT';

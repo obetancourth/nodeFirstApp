@@ -7,7 +7,7 @@ function backoffice_router(db){
     var secciones = db.collection("secciones");
 
     router.get("/", function(req,res){
-        secciones.find({"Reportes.Status":"Reportado"},{sort:[["FechaReporte",1]]}).toArray(
+        secciones.find({"Estado":"ACT","Reportes.Status":"Reportado"},{sort:[["FechaReporte",1]]}).toArray(
             function(err, reportes){
                 var finalReport = new Array();
                 for(var i= 0; i<reportes.length; i++){
