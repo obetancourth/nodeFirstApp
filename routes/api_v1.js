@@ -35,19 +35,20 @@ function api_router(db){
       users.findAndModify(query,
                           {},
                           {"$set":{"tocken":tocken,
-                                   "expires":expires.getTime()}}
-                          ,function(err, doc){
-        if(err || (!doc)){
-          console.log(err);
-          res.status(500).json({"error":"No se encuentra Dato"});
-        }
-        console.log(doc);
-
-        res.status(200).json({hashdata:tocken
-                              ,"expires":expires.getTime(),
-                              "user":doc.user});
-      });
-    });
+                                   "expires":expires.getTime()}
+                          },
+                          function(err, doc){
+                                if(err || (!doc)){
+                                  console.log(err);
+                                  res.status(500).json({"error":"No se encuentra Dato"});
+                                }else{
+                                    console.log(doc);
+                                    res.status(200).json({hashdata:tocken,
+                                                        "expires":expires.getTime(),
+                                                        "user":doc.user});
+                                }
+                              });
+    }); //end /getTocken
 
   // Ruta para extraer las aulas con clases en la hora y fecha del sistema
   router.get('/getSecciones/:edificio', function(req, res, next){
